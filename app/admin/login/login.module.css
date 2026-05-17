@@ -1,0 +1,93 @@
+.shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f2;
+  padding: 24px;
+}
+
+.box {
+  background: #fff;
+  border: 1px solid #e8e8e2;
+  border-radius: 4px;
+  padding: 40px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.brand {
+  display: block;
+  font-family: var(--font-instrument-serif), "Georgia", serif;
+  font-style: italic;
+  font-size: 1.5rem;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.sub {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 32px;
+  letter-spacing: 0.02em;
+}
+
+.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 2px;
+  color: #991b1b;
+  font-size: 13px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+
+.label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.input {
+  display: block;
+  width: 100%;
+  border: 1px solid #e8e8e2;
+  border-radius: 2px;
+  font-size: 14px;
+  font-family: var(--font-dm-sans), Arial, sans-serif;
+  padding: 10px 12px;
+  outline: none;
+  margin-bottom: 16px;
+  transition: border-color 0.12s ease;
+  color: #1a1a1a;
+  background: #fff;
+}
+
+.input:focus {
+  border-color: #1a1a2e;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  background: #1a1a2e;
+  color: #fff;
+  border: none;
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-dm-sans), Arial, sans-serif;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 12px;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.btn:hover {
+  opacity: 0.85;
+}

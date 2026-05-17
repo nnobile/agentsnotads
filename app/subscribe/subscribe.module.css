@@ -1,0 +1,165 @@
+.shell {
+  min-height: 85vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  background: #fafaf8;
+}
+
+.box {
+  width: 100%;
+  max-width: 480px;
+}
+
+.headline {
+  font-family: var(--font-instrument-serif), "Georgia", serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.15;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+.subtext {
+  font-size: 14px;
+  color: #888;
+  line-height: 1.65;
+  margin-bottom: 32px;
+}
+
+.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 2px;
+  color: #991b1b;
+  font-size: 13px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.fieldLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.input {
+  display: block;
+  width: 100%;
+  border: 1px solid #e8e8e2;
+  border-radius: 2px;
+  font-size: 14px;
+  font-family: var(--font-dm-sans), Arial, sans-serif;
+  padding: 11px 12px;
+  outline: none;
+  color: #1a1a1a;
+  background: #fff;
+  margin-bottom: 16px;
+  transition: border-color 0.12s ease;
+}
+
+.input:focus {
+  border-color: #1a1a2e;
+}
+
+.cadenceRow {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.cadenceOpt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #555;
+  cursor: pointer;
+}
+
+.cadenceOpt input[type="radio"] {
+  accent-color: #1a1a2e;
+  cursor: pointer;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  background: #1a1a2e;
+  color: #fff;
+  border: none;
+  border-radius: 2px;
+  font-family: var(--font-dm-sans), Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 13px;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- Confirmed / Unsubscribe simple states ---- */
+.simpleShell {
+  min-height: 85vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  background: #fafaf8;
+}
+
+.simpleBox {
+  width: 100%;
+  max-width: 480px;
+}
+
+.simpleHeadline {
+  font-family: var(--font-instrument-serif), "Georgia", serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.15;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+.simpleSubtext {
+  font-size: 14px;
+  color: #888;
+  line-height: 1.65;
+  margin-bottom: 24px;
+}
+
+.homeLink {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: #ccc;
+  color: #1a1a1a;
+  transition: opacity 0.12s ease;
+}
+
+.homeLink:hover {
+  opacity: 0.55;
+}

@@ -1,0 +1,132 @@
+.page {
+  max-width: 680px;
+}
+
+.heading {
+  font-family: var(--font-instrument-serif), "Georgia", serif;
+  font-size: 1.75rem;
+  font-weight: 400;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.subtext {
+  font-size: 13px;
+  color: #888;
+  margin: 0 0 32px 0;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.statCard {
+  background: #fff;
+  border: 1px solid #e8e8e2;
+  border-radius: 2px;
+  padding: 16px 20px;
+}
+
+.statLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1;
+}
+
+.statValueWarn {
+  color: #b45309;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.sendBtn {
+  background: #1a1a2e;
+  color: #fff;
+  border: none;
+  border-radius: 2px;
+  font-family: var(--font-dm-sans), Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.sendBtn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.sendBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sendBtnSecondary {
+  background: transparent;
+  color: #1a1a2e;
+  border: 1px solid #1a1a2e;
+}
+
+.sendBtnSecondary:hover:not(:disabled) {
+  background: #1a1a2e;
+  color: #fff;
+  opacity: 1;
+}
+
+.result {
+  background: #fff;
+  border: 1px solid #e8e8e2;
+  border-radius: 2px;
+  padding: 16px 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #1a1a1a;
+}
+
+.resultSuccess {
+  border-left: 3px solid #16a34a;
+}
+
+.resultSkipped {
+  border-left: 3px solid #b45309;
+}
+
+.resultError {
+  border-left: 3px solid #dc2626;
+}
+
+.resultLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+.errorList {
+  margin: 8px 0 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: #dc2626;
+}

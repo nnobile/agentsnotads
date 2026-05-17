@@ -1,0 +1,96 @@
+.page {
+  background: #fafaf8;
+  min-height: 100vh;
+  padding: 56px 16px 80px;
+}
+
+.container {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.heading {
+  font-family: var(--font-instrument-serif), "Georgia", serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2.2rem, 8vw, 3.5rem);
+  line-height: 1.1;
+  color: #1a1a1a;
+  letter-spacing: -0.025em;
+  margin-bottom: 40px;
+}
+
+.section {
+  margin-bottom: 36px;
+  padding-bottom: 36px;
+  border-bottom: 1px solid #e8e8e2;
+}
+
+.section:last-of-type {
+  border-bottom: none;
+}
+
+.sectionLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-bottom: 14px;
+}
+
+.sectionBody {
+  font-size: 16px;
+  line-height: 1.75;
+  color: #444;
+}
+
+.cta {
+  margin-top: 52px;
+  padding-top: 36px;
+  border-top: 1px solid #e8e8e2;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.ctaText {
+  font-size: 15px;
+  color: #888;
+  line-height: 1.5;
+}
+
+.ctaBtn {
+  display: inline-block;
+  background: #1a1a2e;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 10px 20px;
+  border-radius: 2px;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.ctaBtn:hover {
+  opacity: 0.82;
+}
+
+.backLink {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-bottom: 36px;
+  transition: color 0.12s ease;
+}
+
+.backLink:hover {
+  color: #1a1a1a;
+}

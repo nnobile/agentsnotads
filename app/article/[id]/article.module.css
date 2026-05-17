@@ -1,0 +1,160 @@
+.page {
+  background: #fafaf8;
+  min-height: 100vh;
+}
+
+.container {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 0 24px;
+  }
+}
+
+/* ---- Back link ---- */
+.back {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888;
+  padding: 22px 0 28px;
+  transition: color 0.12s ease;
+}
+
+.back:hover {
+  color: #1a1a1a;
+}
+
+/* ---- Meta row ---- */
+.meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.source {
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+}
+
+.metaDivider {
+  color: #ddd;
+  font-size: 12px;
+}
+
+.date {
+  font-size: 13px;
+  color: #aaa;
+}
+
+/* ---- Title ---- */
+.title {
+  font-family: var(--font-instrument-serif), "Georgia", serif;
+  font-weight: 400;
+  font-size: clamp(1.8rem, 5.5vw, 2.6rem);
+  line-height: 1.15;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+}
+
+/* ---- Tags ---- */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 28px;
+}
+
+.tagPill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 2px;
+  line-height: 1.7;
+}
+
+/* ---- AI summary block ---- */
+.summaryBlock {
+  background: #f5f5f0;
+  border-left: 3px solid #e0e0da;
+  border-radius: 2px;
+  padding: 18px 22px;
+  margin-bottom: 32px;
+}
+
+.summaryLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-bottom: 10px;
+}
+
+.summaryText {
+  font-size: 15px;
+  line-height: 1.72;
+  color: #444;
+}
+
+/* ---- Read button ---- */
+.readBtn {
+  display: inline-block;
+  background: #1a1a2e;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 13px 26px;
+  border-radius: 2px;
+  margin-bottom: 52px;
+  transition: opacity 0.12s ease;
+}
+
+.readBtn:hover {
+  opacity: 0.82;
+}
+
+/* ---- Subscribe CTA ---- */
+.subscribeCta {
+  border-top: 1px solid #e8e8e2;
+  padding: 28px 0 64px;
+}
+
+.ctaText {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.ctaLink {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: #ccc;
+  color: #1a1a1a;
+  transition: opacity 0.12s ease;
+}
+
+.ctaLink:hover {
+  opacity: 0.55;
+}

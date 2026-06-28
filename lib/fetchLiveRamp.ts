@@ -3,14 +3,28 @@ import { createServiceClient } from "./supabase/server";
 
 const parser = new Parser({
   timeout: 10000,
-  headers: { "User-Agent": "AgentsNotAds RSS Reader/1.0" },
+  headers: { "User-Agent": "Mozilla/5.0 (compatible; AgentsNotAds/1.0)" },
 });
 
+// RSS feeds — attempted first, errors are non-fatal
 const LIVERAMP_FEEDS = [
-  { url: "https://liveramp.com/blog/feed/", source: "LiveRamp Blog" },
-  { url: "https://liveramp.com/resources/feed/", source: "LiveRamp Resources" },
+  { url: "https://liveramp.com/blog/feed/", source: "LiveRamp Blog RSS" },
+  { url: "https://liveramp.com/resources/feed/", source: "LiveRamp Resources RSS" },
 ];
 
+// Pages to scrape directly via fetch
+const DIRECT_SCRAPE_PAGES = [
+  { url: "https://liveramp.com/blog/", source: "LiveRamp Blog" },
+  { url: "https://liveramp.com/blog/page/2/", source: "LiveRamp Blog" },
+  { url: "https://liveramp.com/blog/page/3/", source: "LiveRamp Blog" },
+  { url: "https://liveramp.com/blog/page/4/", source: "LiveRamp Blog" },
+  { url: "https://liveramp.com/blog/page/5/", source: "LiveRamp Blog" },
+  { url: "https://liveramp.com/resources/", source: "LiveRamp Resources" },
+  { url: "https://liveramp.com/product/", source: "LiveRamp Product" },
+  { url: "https://liveramp.com/data-collaboration-platform/", source: "LiveRamp Platform" },
+];
+
+// Keywords used to cross-reference the existing articles table
 const ARTICLE_KEYWORDS = [
   "LiveRamp",
   "RampID",
@@ -20,6 +34,31 @@ const ARTICLE_KEYWORDS = [
   "clean room",
   "Authenticated Traffic",
 ];
+
+async function fetchHtml(url: string): Promise<string> {
+  const res = await fetch(url, {
+    headers: { "User-Agent": "Mozilla/5.0 (compatible; AgentsNotAds/1.0)" },
+    signal: AbortSignal.timeout(15000),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status} from ${url}`);
+  return res.text();
+}
+
+function extractTitle(html: string): string {
+  const match = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (!match) return "";
+  return match[1]
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#8211;/g, "–")
+    .replace(/&#8212;/g, "—")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 function stripHtml(html: string): string {
   return html
@@ -36,17 +75,6 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-async function fetchPageContent(url: string): Promise<string> {
-  const res = await fetch(url, {
-    headers: { "User-Agent": "AgentsNotAds RSS Reader/1.0" },
-    signal: AbortSignal.timeout(10000),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const html = await res.text();
-  return stripHtml(html).slice(0, 8000);
-}
-
 export interface LiveRampFetchResult {
   indexed: number;
   errors: string[];
@@ -56,15 +84,14 @@ export async function fetchLiveRamp(): Promise<LiveRampFetchResult> {
   const supabase = createServiceClient();
   const result: LiveRampFetchResult = { indexed: 0, errors: [] };
 
-  // 1. RSS feeds
+  // ── 1. RSS feeds ──────────────────────────────────────────────────────────
   for (const feed of LIVERAMP_FEEDS) {
     let parsed;
     try {
       parsed = await parser.parseURL(feed.url);
     } catch (err) {
-      result.errors.push(
-        `${feed.source} RSS: ${err instanceof Error ? err.message : String(err)}`
-      );
+      const msg = err instanceof Error ? err.message : String(err);
+      result.errors.push(`[RSS ${feed.source}] ${msg}`);
       continue;
     }
 
@@ -85,7 +112,8 @@ export async function fetchLiveRamp(): Promise<LiveRampFetchResult> {
 
       let content = "";
       try {
-        content = await fetchPageContent(url);
+        const html = await fetchHtml(url);
+        content = stripHtml(html).slice(0, 8000);
       } catch {
         content = stripHtml(item.contentSnippet ?? item.summary ?? "").slice(0, 8000);
       }
@@ -97,12 +125,45 @@ export async function fetchLiveRamp(): Promise<LiveRampFetchResult> {
       if (!insertError) {
         result.indexed++;
       } else {
-        result.errors.push(`Insert ${url}: ${insertError.message}`);
+        result.errors.push(`[RSS insert] ${url}: ${insertError.message}`);
       }
     }
   }
 
-  // 2. Cross-reference approved articles table for LiveRamp-relevant content
+  // ── 2. Direct page scraping ───────────────────────────────────────────────
+  for (const page of DIRECT_SCRAPE_PAGES) {
+    let html: string;
+    try {
+      html = await fetchHtml(page.url);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      result.errors.push(`[Scrape ${page.url}] ${msg}`);
+      continue;
+    }
+
+    const { data: existing } = await supabase
+      .from("liveramp_articles")
+      .select("id")
+      .eq("url", page.url)
+      .maybeSingle();
+
+    if (existing) continue;
+
+    const title = extractTitle(html) || page.source;
+    const content = stripHtml(html).slice(0, 8000);
+
+    const { error: insertError } = await supabase
+      .from("liveramp_articles")
+      .insert({ url: page.url, title, source: page.source, content, tags: [] });
+
+    if (!insertError) {
+      result.indexed++;
+    } else {
+      result.errors.push(`[Scrape insert] ${page.url}: ${insertError.message}`);
+    }
+  }
+
+  // ── 3. Cross-reference approved articles table ────────────────────────────
   const orConditions = ARTICLE_KEYWORDS.flatMap((kw) => [
     `title.ilike.%${kw}%`,
     `summary.ilike.%${kw}%`,
@@ -116,7 +177,7 @@ export async function fetchLiveRamp(): Promise<LiveRampFetchResult> {
     .limit(50);
 
   if (articlesError) {
-    result.errors.push(`articles cross-ref: ${articlesError.message}`);
+    result.errors.push(`[Cross-ref] ${articlesError.message}`);
   } else if (relatedArticles) {
     for (const article of relatedArticles) {
       const { data: existing } = await supabase
@@ -140,7 +201,7 @@ export async function fetchLiveRamp(): Promise<LiveRampFetchResult> {
       if (!insertError) {
         result.indexed++;
       } else {
-        result.errors.push(`Insert cross-ref ${article.url}: ${insertError.message}`);
+        result.errors.push(`[Cross-ref insert] ${article.url}: ${insertError.message}`);
       }
     }
   }

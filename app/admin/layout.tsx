@@ -24,6 +24,9 @@ export default function AdminLayout({
             <Link href="/admin/sources" className={styles.navLink}>
               Sources
             </Link>
+            <Link href="/admin/liveramp" className={styles.navLink}>
+              LiveRamp
+            </Link>
           </div>
           <form
             action="/api/admin/logout"

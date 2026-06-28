@@ -1,3 +1,6 @@
+export const runtime = "nodejs";
+export const maxDuration = 300;
+
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import Anthropic from "@anthropic-ai/sdk";
@@ -99,7 +102,7 @@ export async function POST(request: NextRequest) {
   const [{ data: documents }, { data: articles }] = await Promise.all([
     supabase
       .from("liveramp_documents")
-      .select("filename, content")
+      .select("id, filename, storage_path, content")
       .eq("active", true)
       .order("uploaded_at", { ascending: false })
       .limit(5),
@@ -110,10 +113,67 @@ export async function POST(request: NextRequest) {
       .limit(20),
   ]);
 
+  // Resolve PDF content lazily: fetch from Storage, extract via Claude, cache back to DB
+  const resolvedDocuments = await Promise.all(
+    (documents ?? []).map(async (doc) => {
+      const needsExtraction =
+        doc.filename.toLowerCase().endsWith(".pdf") && !doc.content;
+
+      if (!needsExtraction) return doc;
+
+      try {
+        const { data: blob } = await supabase.storage
+          .from("liveramp-docs")
+          .download(doc.storage_path);
+
+        if (!blob) return doc;
+
+        const buffer = Buffer.from(await blob.arrayBuffer());
+
+        const extraction = await anthropic.messages.create({
+          model: "claude-sonnet-4-6",
+          max_tokens: 4096,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "document",
+                  source: {
+                    type: "base64",
+                    media_type: "application/pdf",
+                    data: buffer.toString("base64"),
+                  },
+                },
+                {
+                  type: "text",
+                  text: "Extract and return all text content from this document. Return only the extracted text, no commentary.",
+                },
+              ],
+            },
+          ],
+        });
+
+        const block = extraction.content[0];
+        const extracted = block.type === "text" ? block.text : "";
+
+        // Cache extracted text so subsequent requests skip this step
+        await supabase
+          .from("liveramp_documents")
+          .update({ content: extracted })
+          .eq("id", doc.id);
+
+        return { ...doc, content: extracted };
+      } catch {
+        return doc;
+      }
+    })
+  );
+
   let knowledgeBase = "";
 
-  if (documents && documents.length > 0) {
-    knowledgeBase += documents
+  if (resolvedDocuments.length > 0) {
+    knowledgeBase += resolvedDocuments
       .map(
         (d) =>
           `--- UPLOADED DOCUMENT: ${d.filename} ---\n${(d.content ?? "").slice(0, 1000)}`

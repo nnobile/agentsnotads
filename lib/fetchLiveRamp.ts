@@ -6,22 +6,12 @@ const parser = new Parser({
   headers: { "User-Agent": "Mozilla/5.0 (compatible; AgentsNotAds/1.0)" },
 });
 
-// RSS feeds — attempted first, errors are non-fatal
-const LIVERAMP_FEEDS = [
-  { url: "https://liveramp.com/blog/feed/", source: "LiveRamp Blog RSS" },
-  { url: "https://liveramp.com/resources/feed/", source: "LiveRamp Resources RSS" },
-];
-
-// Pages to scrape directly via fetch
-const DIRECT_SCRAPE_PAGES = [
-  { url: "https://liveramp.com/blog/", source: "LiveRamp Blog" },
-  { url: "https://liveramp.com/blog/page/2/", source: "LiveRamp Blog" },
-  { url: "https://liveramp.com/blog/page/3/", source: "LiveRamp Blog" },
-  { url: "https://liveramp.com/blog/page/4/", source: "LiveRamp Blog" },
-  { url: "https://liveramp.com/blog/page/5/", source: "LiveRamp Blog" },
-  { url: "https://liveramp.com/resources/", source: "LiveRamp Resources" },
-  { url: "https://liveramp.com/product/", source: "LiveRamp Product" },
-  { url: "https://liveramp.com/data-collaboration-platform/", source: "LiveRamp Platform" },
+// Trade press RSS feeds — tag/search pages covering LiveRamp
+const TRADE_PRESS_FEEDS = [
+  { url: "https://adexchanger.com/tag/liveramp/feed/", source: "AdExchanger" },
+  { url: "https://www.exchangewire.com/tag/liveramp/feed/", source: "ExchangeWire" },
+  { url: "https://digiday.com/tag/liveramp/feed/", source: "Digiday" },
+  { url: "https://martech.org/tag/liveramp/feed/", source: "Martech.org" },
 ];
 
 // Keywords used to cross-reference the existing articles table
@@ -41,23 +31,8 @@ async function fetchHtml(url: string): Promise<string> {
     signal: AbortSignal.timeout(15000),
     cache: "no-store",
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status} from ${url}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.text();
-}
-
-function extractTitle(html: string): string {
-  const match = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-  if (!match) return "";
-  return match[1]
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&#8211;/g, "–")
-    .replace(/&#8212;/g, "—")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 function stripHtml(html: string): string {
@@ -84,8 +59,8 @@ export async function fetchLiveRamp(): Promise<LiveRampFetchResult> {
   const supabase = createServiceClient();
   const result: LiveRampFetchResult = { indexed: 0, errors: [] };
 
-  // ── 1. RSS feeds ──────────────────────────────────────────────────────────
-  for (const feed of LIVERAMP_FEEDS) {
+  // ── 1. Trade press RSS feeds ──────────────────────────────────────────────
+  for (const feed of TRADE_PRESS_FEEDS) {
     let parsed;
     try {
       parsed = await parser.parseURL(feed.url);
@@ -125,45 +100,12 @@ export async function fetchLiveRamp(): Promise<LiveRampFetchResult> {
       if (!insertError) {
         result.indexed++;
       } else {
-        result.errors.push(`[RSS insert] ${url}: ${insertError.message}`);
+        result.errors.push(`[RSS insert ${feed.source}] ${url}: ${insertError.message}`);
       }
     }
   }
 
-  // ── 2. Direct page scraping ───────────────────────────────────────────────
-  for (const page of DIRECT_SCRAPE_PAGES) {
-    let html: string;
-    try {
-      html = await fetchHtml(page.url);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      result.errors.push(`[Scrape ${page.url}] ${msg}`);
-      continue;
-    }
-
-    const { data: existing } = await supabase
-      .from("liveramp_articles")
-      .select("id")
-      .eq("url", page.url)
-      .maybeSingle();
-
-    if (existing) continue;
-
-    const title = extractTitle(html) || page.source;
-    const content = stripHtml(html).slice(0, 8000);
-
-    const { error: insertError } = await supabase
-      .from("liveramp_articles")
-      .insert({ url: page.url, title, source: page.source, content, tags: [] });
-
-    if (!insertError) {
-      result.indexed++;
-    } else {
-      result.errors.push(`[Scrape insert] ${page.url}: ${insertError.message}`);
-    }
-  }
-
-  // ── 3. Cross-reference approved articles table ────────────────────────────
+  // ── 2. Cross-reference approved articles table ────────────────────────────
   const orConditions = ARTICLE_KEYWORDS.flatMap((kw) => [
     `title.ilike.%${kw}%`,
     `summary.ilike.%${kw}%`,

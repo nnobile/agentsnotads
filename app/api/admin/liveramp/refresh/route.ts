@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { fetchLiveRamp } from "@/lib/fetchLiveRamp";
 
-export async function POST(_request: NextRequest) {
+export async function POST() {
   const cookieStore = cookies();
   const session = cookieStore.get("admin_session");
   if (!session || session.value !== "admin:ok") {

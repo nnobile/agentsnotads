@@ -31,6 +31,11 @@ export default function LiveRampClient({ articleCount, documentCount }: Props) {
   const [refreshResult, setRefreshResult] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<string | null>(null);
   const [liveArticleCount, setLiveArticleCount] = useState(articleCount);
+  const [liveDocumentCount, setLiveDocumentCount] = useState(documentCount);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<{ success: boolean; message: string } | null>(null);
+  const [fileInputKey, setFileInputKey] = useState(0);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -137,6 +142,42 @@ export default function LiveRampClient({ articleCount, documentCount }: Props) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage(input);
+    }
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null;
+    setUploadFile(file);
+    setUploadStatus(null);
+  }
+
+  async function handleUpload() {
+    if (!uploadFile || uploading) return;
+    setUploading(true);
+    setUploadStatus(null);
+    try {
+      const form = new FormData();
+      form.append("file", uploadFile);
+      const res = await fetch("/api/admin/liveramp/upload", {
+        method: "POST",
+        body: form,
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setUploadStatus({ success: false, message: data.error ?? "Upload failed." });
+      } else {
+        setUploadStatus({
+          success: true,
+          message: `Uploaded "${data.filename}" (${data.contentLength.toLocaleString()} chars extracted).`,
+        });
+        setLiveDocumentCount((prev) => prev + 1);
+        setUploadFile(null);
+        setFileInputKey((k) => k + 1);
+      }
+    } catch {
+      setUploadStatus({ success: false, message: "Network error. Please try again." });
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -286,7 +327,7 @@ export default function LiveRampClient({ articleCount, documentCount }: Props) {
             <div className={styles.kbStats}>
               <span>{liveArticleCount} indexed articles</span>
               <span className={styles.kbDivider}>·</span>
-              <span>{documentCount} uploaded documents</span>
+              <span>{liveDocumentCount} uploaded documents</span>
               {lastRefresh && (
                 <>
                   <span className={styles.kbDivider}>·</span>
@@ -308,19 +349,40 @@ export default function LiveRampClient({ articleCount, documentCount }: Props) {
               )}
             </div>
 
-            <div className={styles.uploadPlaceholder}>
+            <div className={styles.uploadSection}>
               <label className={styles.uploadLabel}>
                 Upload Document (PDF, TXT, DOCX)
               </label>
               <input
+                key={fileInputKey}
                 type="file"
                 accept=".pdf,.txt,.docx"
                 className={styles.uploadInput}
-                disabled
+                onChange={handleFileSelect}
               />
-              <span className={styles.uploadNote}>
-                Upload endpoint coming in next session.
-              </span>
+              {uploadFile && (
+                <div className={styles.uploadFileRow}>
+                  <span className={styles.uploadFileName}>{uploadFile.name}</span>
+                  <button
+                    className={styles.uploadBtn}
+                    onClick={handleUpload}
+                    disabled={uploading}
+                  >
+                    {uploading ? "Uploading…" : "Upload"}
+                  </button>
+                </div>
+              )}
+              {uploadStatus && (
+                <span
+                  className={`${styles.uploadStatus} ${
+                    uploadStatus.success
+                      ? styles.uploadStatusSuccess
+                      : styles.uploadStatusError
+                  }`}
+                >
+                  {uploadStatus.message}
+                </span>
+              )}
             </div>
           </div>
         )}

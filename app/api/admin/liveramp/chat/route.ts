@@ -93,17 +93,37 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  // Fetch knowledge base context
+  // Fetch knowledge base context — documents first, then articles
   const supabase = createServiceClient();
-  const { data: articles } = await supabase
-    .from("liveramp_articles")
-    .select("title, source, content")
-    .order("indexed_at", { ascending: false })
-    .limit(20);
+
+  const [{ data: documents }, { data: articles }] = await Promise.all([
+    supabase
+      .from("liveramp_documents")
+      .select("filename, content")
+      .eq("active", true)
+      .order("uploaded_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("liveramp_articles")
+      .select("title, source, content")
+      .order("indexed_at", { ascending: false })
+      .limit(20),
+  ]);
 
   let knowledgeBase = "";
+
+  if (documents && documents.length > 0) {
+    knowledgeBase += documents
+      .map(
+        (d) =>
+          `--- UPLOADED DOCUMENT: ${d.filename} ---\n${(d.content ?? "").slice(0, 1000)}`
+      )
+      .join("\n\n");
+  }
+
   if (articles && articles.length > 0) {
-    knowledgeBase = articles
+    if (knowledgeBase) knowledgeBase += "\n\n";
+    knowledgeBase += articles
       .map((a) => `[${a.source}] ${a.title}\n${(a.content ?? "").slice(0, 500)}`)
       .join("\n\n");
   }

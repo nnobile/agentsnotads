@@ -439,10 +439,10 @@
   color: #444;
 }
 
-.uploadPlaceholder {
+.uploadSection {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   padding-top: 4px;
   border-top: 1px solid #f0f0eb;
 }
@@ -458,13 +458,59 @@
 .uploadInput {
   font-family: var(--font-dm-sans), Arial, sans-serif;
   font-size: 12px;
-  color: #aaa;
-  cursor: not-allowed;
-  opacity: 0.5;
+  color: #555;
+  cursor: pointer;
 }
 
-.uploadNote {
-  font-size: 11px;
-  color: #aaa;
-  font-style: italic;
+.uploadFileRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.uploadFileName {
+  font-size: 12px;
+  color: #444;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uploadBtn {
+  background: #1a1a2e;
+  color: #fff;
+  border: none;
+  border-radius: 2px;
+  font-family: var(--font-dm-sans), Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.12s ease;
+}
+
+.uploadBtn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.uploadBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.uploadStatus {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.uploadStatusSuccess {
+  color: #16a34a;
+}
+
+.uploadStatusError {
+  color: #dc2626;
 }

@@ -17,6 +17,72 @@
   margin: 0;
 }
 
+/* ---- Resume banner ---- */
+.resumeBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #e8e8e2;
+  border-left: 3px solid #1a1a2e;
+  border-radius: 4px;
+  padding: 13px 16px;
+  margin-bottom: 12px;
+}
+
+.resumeBannerText {
+  font-size: 13px;
+  color: #444;
+  line-height: 1.4;
+}
+
+.resumeBannerActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.resumeBtn {
+  background: #1a1a2e;
+  color: #fff;
+  border: none;
+  border-radius: 2px;
+  font-family: var(--font-dm-sans), Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.resumeBtn:hover {
+  opacity: 0.85;
+}
+
+.startFreshBtn {
+  background: transparent;
+  border: 1px solid #e8e8e2;
+  border-radius: 2px;
+  font-family: var(--font-dm-sans), Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #888;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+
+.startFreshBtn:hover {
+  border-color: #1a1a2e;
+  color: #1a1a2e;
+}
+
 /* ---- Tab bar ---- */
 .tabBar {
   display: flex;

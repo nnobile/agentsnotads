@@ -11,9 +11,28 @@ interface Message {
   content: string;
 }
 
+interface ResumeBanner {
+  id: string;
+  messages: Message[];
+  updatedAt: string;
+  difficulty: Difficulty;
+  topic: string;
+}
+
 interface Props {
   articleCount: number;
   documentCount: number;
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }
 
 export default function LiveRampClient({ articleCount, documentCount }: Props) {
@@ -26,6 +45,7 @@ export default function LiveRampClient({ articleCount, documentCount }: Props) {
   const [streaming, setStreaming] = useState(false);
   const [currentMessage, setCurrentMessage] = useState("");
   const [sessionSummary, setSessionSummary] = useState<string | null>(null);
+  const [resumeBanner, setResumeBanner] = useState<ResumeBanner | null>(null);
   const [kbOpen, setKbOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshResult, setRefreshResult] = useState<string | null>(null);
@@ -38,10 +58,45 @@ export default function LiveRampClient({ articleCount, documentCount }: Props) {
   const [fileInputKey, setFileInputKey] = useState(0);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
+  // Stored in a ref so streamChat's useCallback doesn't need it as a dep
+  const sessionIdRef = useRef<string | null>(null);
 
+  // Scroll to bottom whenever messages or the in-progress stream changes
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, currentMessage]);
+
+  // On tab change, look for a recent session to offer resume
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchSession() {
+      try {
+        const res = await fetch(`/api/admin/liveramp/session/${activeTab}`);
+        if (cancelled || !res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        if (data?.id) {
+          setResumeBanner({
+            id: data.id,
+            messages: (data.messages ?? []) as Message[],
+            updatedAt: data.updated_at,
+            difficulty: (data.difficulty as Difficulty) ?? "Intermediate",
+            topic: data.topic ?? "",
+          });
+        } else {
+          setResumeBanner(null);
+        }
+      } catch {
+        if (!cancelled) setResumeBanner(null);
+      }
+    }
+
+    fetchSession();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab]);
 
   function resetSession() {
     setMessages([]);
@@ -49,11 +104,27 @@ export default function LiveRampClient({ articleCount, documentCount }: Props) {
     setSessionSummary(null);
     setSessionStarted(false);
     setInput("");
+    setResumeBanner(null);
+    sessionIdRef.current = null;
   }
 
   function handleTabChange(tab: Mode) {
     setActiveTab(tab);
     resetSession();
+  }
+
+  function handleResume() {
+    if (!resumeBanner) return;
+    sessionIdRef.current = resumeBanner.id;
+    setMessages(resumeBanner.messages);
+    setDifficulty(resumeBanner.difficulty);
+    setTopic(resumeBanner.topic);
+    setSessionStarted(true);
+    setResumeBanner(null);
+  }
+
+  function handleStartFresh() {
+    setResumeBanner(null);
   }
 
   const streamChat = useCallback(
@@ -103,8 +174,33 @@ export default function LiveRampClient({ articleCount, documentCount }: Props) {
           role: "assistant",
           content: chatText || fullText,
         };
-        setMessages([...msgs, assistantMsg]);
+        const nextMessages = [...msgs, assistantMsg];
+        setMessages(nextMessages);
         setCurrentMessage("");
+
+        // Persist session — non-fatal if this fails
+        try {
+          const saveBody: {
+            mode: Mode;
+            difficulty: Difficulty;
+            topic: string;
+            messages: Message[];
+            id?: string;
+          } = { mode: activeTab, difficulty, topic, messages: nextMessages };
+          if (sessionIdRef.current) saveBody.id = sessionIdRef.current;
+
+          const saveRes = await fetch("/api/admin/liveramp/session/save", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(saveBody),
+          });
+          if (saveRes.ok) {
+            const saveData = await saveRes.json();
+            if (saveData.id) sessionIdRef.current = saveData.id;
+          }
+        } catch {
+          // Session save failure is non-fatal
+        }
       } catch {
         setMessages([
           ...msgs,
@@ -126,6 +222,7 @@ export default function LiveRampClient({ articleCount, documentCount }: Props) {
     setSessionStarted(true);
     setMessages([kickoff]);
     setSessionSummary(null);
+    setResumeBanner(null);
     await streamChat([kickoff]);
   }
 
@@ -166,9 +263,10 @@ export default function LiveRampClient({ articleCount, documentCount }: Props) {
       if (!res.ok || data.error) {
         setUploadStatus({ success: false, message: data.error ?? "Upload failed." });
       } else {
+        const note = data.note ? ` ${data.note}` : "";
         setUploadStatus({
           success: true,
-          message: `Uploaded "${data.filename}" (${data.contentLength.toLocaleString()} chars extracted).`,
+          message: `Uploaded "${data.filename}".${note}`,
         });
         setLiveDocumentCount((prev) => prev + 1);
         setUploadFile(null);
@@ -229,6 +327,24 @@ export default function LiveRampClient({ articleCount, documentCount }: Props) {
           </button>
         ))}
       </div>
+
+      {/* Resume banner */}
+      {resumeBanner && !sessionStarted && (
+        <div className={styles.resumeBanner}>
+          <span className={styles.resumeBannerText}>
+            You have an unfinished {TAB_LABELS[activeTab]} session from{" "}
+            {timeAgo(resumeBanner.updatedAt)}. Resume or start fresh?
+          </span>
+          <div className={styles.resumeBannerActions}>
+            <button className={styles.resumeBtn} onClick={handleResume}>
+              Resume
+            </button>
+            <button className={styles.startFreshBtn} onClick={handleStartFresh}>
+              Start Fresh
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Chat card */}
       <div className={styles.chatCard}>

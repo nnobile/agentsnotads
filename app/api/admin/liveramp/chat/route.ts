@@ -8,7 +8,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 
 const anthropic = new Anthropic();
 
-type Mode = "product" | "competitive" | "scenario";
+type Mode = "product" | "competitive" | "scenario" | "tutor" | "study_guide";
 type Difficulty = "Beginner" | "Intermediate" | "Expert";
 
 interface ChatRequest {
@@ -28,6 +28,31 @@ function buildSystemPrompt(
   const kbBlock = knowledgeBase
     ? `\n\n---\nKNOWLEDGE BASE (recent LiveRamp content — cite this when relevant):\n${knowledgeBase}\n---`
     : "";
+
+  if (mode === "tutor") {
+    return `You are a senior LiveRamp expert and advisor helping a new BD Lead on the Ecosystems & AI team get up to speed quickly.
+You have deep knowledge of LiveRamp's full product suite (RampID, Safe Haven, Data Marketplace, ATS, Publisher Audiences), competitive positioning vs Snowflake, Google, Amazon, and Epsilon, the Gravity Theory of Data Trade framework, and the Publicis acquisition.
+Your knowledge base includes indexed trade press from AdExchanger, Digiday, and ExchangeWire, plus any documents uploaded by the user.
+Be conversational, direct, and specific. No generic answers. When relevant, cite whether something comes from LiveRamp's own positioning or trade press coverage. Help the user think through problems, prepare for conversations, and go deep on any topic they raise.${kbBlock}`;
+  }
+
+  if (mode === "study_guide") {
+    return `You are generating a structured study guide for a LiveRamp BD Lead joining the Ecosystems & AI team.
+Draw from the knowledge base provided and your training knowledge about LiveRamp.
+Generate a comprehensive but scannable reference document with these sections:
+
+RampID — What it is, Maintained vs Derived, how it's created, international considerations
+Safe Haven — Architecture, key use cases, how to position vs Snowflake clean room
+Data Marketplace — How it works, commission structure, partner types, value prop
+Authenticated Traffic Solution (ATS) — Publisher-side, how it feeds RampID
+Publisher Audiences — Technical overview, integration patterns
+Competitive Landscape — LiveRamp vs Snowflake, vs Google PAIR/ADH, vs Amazon Marketing Cloud, vs Epsilon CORE ID
+The Gravity Theory of Data Trade — Framework explanation and BD application
+Publicis Acquisition — Deal rationale, valuation logic, what it means for partners
+
+Format each section with a bold header, 3-5 bullet points of key facts, and 1-2 sentences on how a BD person would use this in a partner conversation.
+Be specific. No filler. Cite trade press where relevant.${kbBlock}`;
+  }
 
   if (mode === "product") {
     return `You are a LiveRamp product expert running a training quiz for a new BD Lead joining LiveRamp's Ecosystems & AI team.
